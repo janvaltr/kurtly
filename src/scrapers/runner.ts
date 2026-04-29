@@ -27,7 +27,7 @@ export async function runScraper(venueSlug: string) {
   if (!venue) throw new Error(`Hala ${venueSlug} nebyla nalezena v DB.`)
 
   console.log(`[runner] Spouštím ${venueSlug}...`)
-  const rawSlots = await scraper.scrape(venue.scraperConfig as any || {})
+  const rawSlots = await scraper.scrape(venue.scraper_config as any || {})
 
   // 1. Smazat staré budoucí sloty pro tuto halu
   await supabase
@@ -36,20 +36,34 @@ export async function runScraper(venueSlug: string) {
     .eq('venue_id', venue.id)
     .gt('starts_at', new Date().toISOString())
 
-  // 2. Vložit nové volné sloty
+  // 2. Načíst kurty pro tuto halu pro mapování jmen na ID
+  const { data: courts } = await supabase
+    .from('courts')
+    .select('id, name')
+    .eq('venue_id', venue.id)
+
+  const courtMap = new Map(courts?.map(c => [c.name, c.id]))
+
+  // 3. Vložit nové volné sloty
   if (rawSlots.length > 0) {
     const toInsert = rawSlots
       .filter(s => s.isAvailable)
-      .map(s => ({
-        venue_id: venue.id,
-        court_name: s.courtName,
-        starts_at: s.startsAt.toISOString(),
-        ends_at: s.endsAt.toISOString(),
-        is_available: true,
-        price_czk: s.priceCzk
-      }))
+      .map(s => {
+        const courtId = courtMap.get(s.courtName)
+        if (!courtId) {
+           console.warn(`[runner] Kurt "${s.courtName}" nenalezen v DB pro halu ${venue.slug}`)
+        }
+        return {
+          venue_id: venue.id,
+          court_id: courtId || null,
+          starts_at: s.startsAt.toISOString(),
+          ends_at: s.endsAt.toISOString(),
+          is_available: true,
+          price_czk: s.priceCzk
+        }
+      })
 
-    await supabase.from('slots').insert(toInsert)
+    await supabase.from('slots').insert(toInsert as any)
   }
 
   console.log(`[runner] ${venueSlug} dokončeno. Nalezeno ${rawSlots.length} slotů.`)

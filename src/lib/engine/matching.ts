@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../../../types/database.types'
+import { Database } from '@/types/database.types'
 
 // Používáme Service Role Key pro bypass RLS v enginu
 const supabase = createClient<Database>(
