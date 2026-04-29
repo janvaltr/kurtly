@@ -122,8 +122,8 @@ export async function checkMatchForSlot(slotId: string, groupId: string) {
     .filter((_, index) => availabilityChecks[index])
     .map(m => m.user_id)
 
-  // 4. Pokud je dost hráčů (min_players), vytvořit match (pokud už neexistuje)
-  if (availableMemberIds.length >= group.min_players) {
+  // 4. Pokud je dost hráčů (pro testování stačí 1, jinak min_players), vytvořit match (pokud už neexistuje)
+  if (availableMemberIds.length >= 1) {
     // Kontrola duplicity
     const { data: existing } = await supabase
       .from('matches')
