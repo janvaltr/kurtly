@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { confirmJoin } from './actions'
@@ -14,8 +15,15 @@ export default async function JoinCodePage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
+  // Pro načtení skupiny podle kódu potřebujeme bypassnout RLS, 
+  // protože uživatel ještě není členem skupiny a normálně by ji neviděl.
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   // Najdeme skupinu podle invite kódu
-  const { data: group } = await supabase
+  const { data: group } = await supabaseAdmin
     .from('groups')
     .select('*')
     .eq('invite_code', code.toUpperCase())
