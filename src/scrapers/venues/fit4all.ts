@@ -70,10 +70,13 @@ export const fit4allScraper: VenueScraper = {
         })
 
         for (const s of daySlots) {
-          const [h, m] = s.timeStr.split(':').map(Number)
-          const startsAt = new Date(date)
-          startsAt.setHours(h, m, 0, 0)
+          // Vytvoříme ISO string s brněnským offsetem (+02:00 v dubnu)
+          // Tím zajistíme, že i na Vercelu (UTC) se čas uloží správně.
+          const hour = s.timeStr.split(':')[0].padStart(2, '0')
+          const minute = s.timeStr.split(':')[1]
+          const isoString = `${dateStr}T${hour}:${minute}:00+02:00`
           
+          const startsAt = new Date(isoString)
           const endsAt = new Date(startsAt.getTime() + s.durationMin * 60 * 1000)
 
           if (s.isAvailable) {
