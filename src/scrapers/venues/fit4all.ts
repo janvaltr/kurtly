@@ -39,36 +39,28 @@ export const fit4allScraper: VenueScraper = {
             .slice(1)
             .map(th => th.textContent?.trim() || 'Kurt')
 
-          let lastTimeLabel = ''
+          const cells = table.querySelectorAll('tbody td')
+          cells.forEach((cell, idx) => {
+            // Každá td buňka může obsahovat jeden nebo více slotů (div.court-cell)
+            const courtDivs = cell.querySelectorAll('div.court-cell')
+            if (courtDivs.length === 0) return
 
-          const rows = table.querySelectorAll('tbody tr')
-          rows.forEach((row, rowIndex) => {
-            const cells = row.querySelectorAll('td')
-            if (cells.length === 0) return
-
-            let timeStr = cells[0]?.textContent?.trim() || ''
+            // Zjistíme index kurtu (sloupce). První td v řádku je čas, tak musíme vědět, kde jsme.
+            // Ale jednodušší je vzít to z data-court-number nebo parent struktury.
+            // V Fit4All má každý div data-court-number.
             
-            // Pokud je label prázdný (u 30min slotů bývá label jen u první půlhodiny), 
-            // odvodíme čas z předchozího nebo z pozice. 
-            // U Fit4All je v prvním sloupci label např. "7:00" a pod ním je prázdno (pro 7:30).
-            if (!timeStr && lastTimeLabel) {
-              const [h, m] = lastTimeLabel.split(':').map(Number)
-              timeStr = `${h}:${m === 0 ? '30' : (h + 1) + ':00'}`
-            } else if (timeStr) {
-              lastTimeLabel = timeStr
-            }
-
-            if (!timeStr) return
-
-            cells.forEach((cell, idx) => {
-              if (idx === 0) return // Sloupec s časem
+            courtDivs.forEach(div => {
+              const timeVal = parseFloat(div.getAttribute('data-time') || '0')
+              const hour = Math.floor(timeVal)
+              const minute = (timeVal % 1) === 0.5 ? '30' : '00'
+              const timeStr = `${hour}:${minute}`
               
-              // VOLNÝ slot obsahuje interaktivní prvek (div nebo a)
-              const isAvailable = !!cell.querySelector('div, a')
-              
+              const isAvailable = div.classList.contains('court-cell-free')
+              const courtName = div.getAttribute('data-name') || 'Kurt'
+
               result.push({
-                courtName: headerCells[idx - 1] || `Kurt ${idx}`,
-                timeStr: timeStr,
+                courtName,
+                timeStr,
                 isAvailable,
                 durationMin: 30
               })
