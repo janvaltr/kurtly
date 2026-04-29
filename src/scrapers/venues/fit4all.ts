@@ -28,16 +28,16 @@ export const fit4allScraper: VenueScraper = {
         )
 
         // Čekáme na tabulku, kterou plní AJAX
-        await page.waitForSelector('table.reservations-table', { timeout: 10000 })
+        await page.waitForSelector('table.court-table', { timeout: 10000 })
 
         const daySlots = await page.evaluate(() => {
           const result: any[] = []
-          const table = document.querySelector('table.reservations-table')
+          const table = document.querySelector('table.court-table')
           if (!table) return result
 
           const headerCells = Array.from(table.querySelectorAll('thead th'))
             .slice(1)
-            .map(th => th.textContent?.trim() || 'Kurt')
+            .map(th => th.textContent?.replace('Badminton ', '')?.trim() || 'Kurt')
 
           const cells = table.querySelectorAll('tbody td')
           cells.forEach((cell, idx) => {
