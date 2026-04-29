@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { format, addDays, isSameDay } from 'date-fns'
 import { cs } from 'date-fns/locale'
+import SyncButton from './SyncButton'
 
 export default async function VenuesPage() {
   const supabase = await createClient()
@@ -32,6 +33,7 @@ export default async function VenuesPage() {
             <h1 className="mt-2 font-display text-4xl font-bold text-primary italic tracking-tight">PRŮZKUMNÍK HAL</h1>
             <p className="text-muted">Aktuální přehled volných kurtů v Brně bez ohledu na tvoji skupinu.</p>
           </div>
+          <SyncButton />
         </header>
 
         <div className="space-y-16">

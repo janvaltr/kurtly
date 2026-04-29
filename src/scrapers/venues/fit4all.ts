@@ -39,23 +39,38 @@ export const fit4allScraper: VenueScraper = {
             .slice(1)
             .map(th => th.textContent?.trim() || 'Kurt')
 
+          let lastTimeLabel = ''
+
           const rows = table.querySelectorAll('tbody tr')
-          rows.forEach(row => {
+          rows.forEach((row, rowIndex) => {
             const cells = row.querySelectorAll('td')
-            const timeStr = cells[0]?.textContent?.trim() || ''
+            if (cells.length === 0) return
+
+            let timeStr = cells[0]?.textContent?.trim() || ''
+            
+            // Pokud je label prázdný (u 30min slotů bývá label jen u první půlhodiny), 
+            // odvodíme čas z předchozího nebo z pozice. 
+            // U Fit4All je v prvním sloupci label např. "7:00" a pod ním je prázdno (pro 7:30).
+            if (!timeStr && lastTimeLabel) {
+              const [h, m] = lastTimeLabel.split(':').map(Number)
+              timeStr = `${h}:${m === 0 ? '30' : (h + 1) + ':00'}`
+            } else if (timeStr) {
+              lastTimeLabel = timeStr
+            }
+
             if (!timeStr) return
 
             cells.forEach((cell, idx) => {
               if (idx === 0) return // Sloupec s časem
               
-              // Logika pro zjištění dostupnosti (dle CSS tříd Fit4All)
-              const isAvailable = cell.classList.contains('free') || 
-                                  (!cell.classList.contains('taken') && !cell.classList.contains('reserved'))
+              // VOLNÝ slot obsahuje interaktivní prvek (div nebo a)
+              const isAvailable = !!cell.querySelector('div, a')
               
               result.push({
                 courtName: headerCells[idx - 1] || `Kurt ${idx}`,
                 timeStr: timeStr,
-                isAvailable
+                isAvailable,
+                durationMin: 30
               })
             })
           })
@@ -67,7 +82,7 @@ export const fit4allScraper: VenueScraper = {
           const startsAt = new Date(date)
           startsAt.setHours(h, m, 0, 0)
           
-          const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000) // 1h sloty
+          const endsAt = new Date(startsAt.getTime() + s.durationMin * 60 * 1000)
 
           if (s.isAvailable) {
             slots.push({
