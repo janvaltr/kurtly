@@ -90,17 +90,15 @@ export default async function VenuesPage() {
                                   return (
                                     <div 
                                       key={time} 
-                                      className="group relative rounded-xl bg-surface p-4 text-sm font-bold border-2 border-border hover:border-primary hover:bg-white hover:shadow-xl hover:shadow-primary/10 transition-all cursor-default"
+                                      className="group relative rounded-xl bg-surface p-3 border-2 border-border hover:border-primary hover:bg-white hover:shadow-xl hover:shadow-primary/10 transition-all cursor-default"
                                     >
                                       <div className="flex items-center justify-between">
-                                        <span className="font-display text-lg">{time}</span>
-                                        {count > 1 ? (
-                                          <span className="bg-primary/10 text-primary text-[10px] px-2 py-1 rounded-full">{count} KURTY</span>
-                                        ) : (
-                                          <span className="text-muted text-[10px] uppercase truncate max-w-[50px]">
-                                            {timeGroups[time][0].courts?.name?.split(' ').pop()}
-                                          </span>
-                                        )}
+                                        <span className="font-display text-lg font-black">{time}</span>
+                                        <span className={`whitespace-nowrap text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
+                                          count > 1 ? 'bg-primary/10 text-primary' : 'bg-muted/10 text-muted'
+                                        }`}>
+                                          {count} {count > 1 ? (count < 5 ? 'KURTY' : 'KURTŮ') : 'KURT'}
+                                        </span>
                                       </div>
                                     </div>
                                   )
