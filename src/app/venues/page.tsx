@@ -18,7 +18,7 @@ export default async function VenuesPage() {
 
   const { data: allSlots } = await supabase
     .from('slots')
-    .select('*')
+    .select('*, courts(name)')
     .gte('starts_at', now.toISOString())
     .lte('starts_at', addDays(now, 7).toISOString())
     .eq('is_available', true)
@@ -69,22 +69,47 @@ export default async function VenuesPage() {
                         </div>
                         
                         <div className="space-y-1">
-                          {daySlots.length > 0 ? (
-                            daySlots.slice(0, 8).map((slot) => (
-                              <div 
-                                key={slot.id} 
-                                className="rounded bg-surface-2 p-2 text-center text-xs font-mono font-medium border border-border/50 hover:border-primary/30 transition-colors"
-                              >
-                                {format(new Date(slot.starts_at), 'HH:mm')}
-                              </div>
-                            ))
-                          ) : (
+                          {daySlots.length > 0 ? (() => {
+                            // Seskupíme podle času
+                            const timeGroups = daySlots.reduce((acc, slot) => {
+                              const time = format(new Date(slot.starts_at), 'HH:mm')
+                              if (!acc[time]) acc[time] = []
+                              acc[time].push(slot)
+                              return acc
+                            }, {} as Record<string, typeof daySlots>)
+                            
+                            const uniqueTimes = Object.keys(timeGroups).sort()
+                            const displayTimes = uniqueTimes.slice(0, 8)
+                            
+                            return (
+                              <>
+                                {displayTimes.map(time => {
+                                  const count = timeGroups[time].length
+                                  return (
+                                    <div 
+                                      key={time} 
+                                      className="rounded bg-surface-2 p-2 text-center text-xs font-mono font-medium border border-border/50 hover:border-primary/30 transition-colors flex justify-between px-3"
+                                    >
+                                      <span>{time}</span>
+                                      {count > 1 ? (
+                                        <span className="text-muted/70 text-[10px]">{count}x kurt</span>
+                                      ) : (
+                                        <span className="text-muted/30 text-[10px] truncate max-w-[60px]" title={timeGroups[time][0].courts?.name || '1 kurt'}>
+                                          {timeGroups[time][0].courts?.name || '1 kurt'}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                                {uniqueTimes.length > 8 && (
+                                  <p className="text-center text-[10px] text-muted pt-2">+{uniqueTimes.length - 8} dalších časů</p>
+                                )}
+                              </>
+                            )
+                          })() : (
                             <div className="py-8 text-center text-[10px] text-muted/30 italic">
                               Žádné volno
                             </div>
-                          )}
-                          {daySlots.length > 8 && (
-                            <p className="text-center text-[10px] text-muted">+{daySlots.length - 8} dalších</p>
                           )}
                         </div>
                       </div>

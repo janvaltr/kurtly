@@ -63,7 +63,10 @@ export async function runScraper(venueSlug: string) {
         }
       })
 
-    await supabase.from('slots').insert(toInsert as any)
+    const { error } = await supabase.from('slots').insert(toInsert as any)
+    if (error) {
+      console.error(`[runner] Chyba při vkládání slotů:`, error)
+    }
   }
 
   console.log(`[runner] ${venueSlug} dokončeno. Nalezeno ${rawSlots.length} slotů.`)
