@@ -28,52 +28,51 @@ export default async function VenuesPage() {
     .order('starts_at')
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg p-8 text-text">
-      <div className="mx-auto w-full max-w-6xl space-y-12">
+    <div className="min-h-screen bg-bg pb-20">
+      <div className="mx-auto w-full max-w-6xl px-8 py-12 space-y-16">
         <header className="flex items-center justify-between">
           <div>
-            <Link href="/dashboard" className="text-sm text-muted hover:text-text">← Dashboard</Link>
-            <h1 className="mt-2 font-display text-4xl font-bold text-primary italic tracking-tight">PRŮZKUMNÍK HAL</h1>
-            <p className="text-muted">Aktuální přehled volných kurtů v Brně bez ohledu na tvoji skupinu.</p>
+            <h1 className="font-display text-5xl font-black text-text italic tracking-tighter leading-none">PRŮZKUMNÍK HAL</h1>
+            <p className="mt-4 text-lg text-muted max-w-2xl">Aktuální přehled volných kurtů v Brně bez ohledu na tvoji skupinu.</p>
           </div>
           <SyncButton />
         </header>
 
-        <div className="space-y-16">
+        <div className="space-y-24">
           {venues?.map((venue) => {
             const venueSlots = allSlots?.filter(s => s.venue_id === venue.id) || []
             
             return (
-              <section key={venue.id} className="space-y-6">
-                <div className="flex items-baseline justify-between border-b border-border pb-4">
-                  <h2 className="font-display text-2xl font-bold text-text">{venue.name}</h2>
+              <section key={venue.id} className="space-y-10">
+                <div className="flex items-end justify-between border-b-4 border-primary/20 pb-4">
+                  <h2 className="font-display text-3xl font-black text-text uppercase tracking-tight">{venue.name}</h2>
                   <a 
                     href={venue.booking_url || '#'} 
                     target="_blank" 
-                    className="text-xs font-bold uppercase tracking-widest text-primary hover:underline"
+                    className="group flex items-center space-x-2 text-sm font-bold uppercase tracking-widest text-primary hover:text-text transition-colors"
                   >
-                    Oficiální web →
+                    <span>Oficiální rezervace</span>
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </a>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-7">
+                <div className="grid gap-8 md:grid-cols-7">
                   {next7Days.map((day) => {
                     const daySlots = venueSlots.filter(s => isSameDay(new Date(s.starts_at), day))
                     
                     return (
-                      <div key={day.toISOString()} className="space-y-3">
-                        <div className="text-center">
-                          <p className="text-[10px] uppercase tracking-tighter text-muted">
+                      <div key={day.toISOString()} className="space-y-4">
+                        <div className="border-b-2 border-border pb-2">
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted">
                             {format(day, 'eeee', { locale: cs })}
                           </p>
-                          <p className="font-display text-lg font-bold">
+                          <p className="font-display text-2xl font-black text-text leading-tight">
                             {format(day, 'd. M.')}
                           </p>
                         </div>
                         
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {daySlots.length > 0 ? (() => {
-                            // Seskupíme podle času
                             const timeGroups = daySlots.reduce((acc, slot) => {
                               const time = formatInTimeZone(new Date(slot.starts_at), TIMEZONE, 'HH:mm')
                               if (!acc[time]) acc[time] = []
@@ -82,7 +81,7 @@ export default async function VenuesPage() {
                             }, {} as Record<string, typeof daySlots>)
                             
                             const uniqueTimes = Object.keys(timeGroups).sort()
-                            const displayTimes = uniqueTimes.slice(0, 8)
+                            const displayTimes = uniqueTimes.slice(0, 10)
                             
                             return (
                               <>
@@ -91,27 +90,29 @@ export default async function VenuesPage() {
                                   return (
                                     <div 
                                       key={time} 
-                                      className="rounded bg-surface-2 p-2 text-center text-xs font-mono font-medium border border-border/50 hover:border-primary/30 transition-colors flex justify-between px-3"
+                                      className="group relative rounded-xl bg-surface p-4 text-sm font-bold border-2 border-border hover:border-primary hover:bg-white hover:shadow-xl hover:shadow-primary/10 transition-all cursor-default"
                                     >
-                                      <span>{time}</span>
-                                      {count > 1 ? (
-                                        <span className="text-muted/70 text-[10px]">{count}x kurt</span>
-                                      ) : (
-                                        <span className="text-muted/30 text-[10px] truncate max-w-[60px]" title={timeGroups[time][0].courts?.name || '1 kurt'}>
-                                          {timeGroups[time][0].courts?.name || '1 kurt'}
-                                        </span>
-                                      )}
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-display text-lg">{time}</span>
+                                        {count > 1 ? (
+                                          <span className="bg-primary/10 text-primary text-[10px] px-2 py-1 rounded-full">{count} KURTY</span>
+                                        ) : (
+                                          <span className="text-muted text-[10px] uppercase truncate max-w-[50px]">
+                                            {timeGroups[time][0].courts?.name?.split(' ').pop()}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   )
                                 })}
-                                {uniqueTimes.length > 8 && (
-                                  <p className="text-center text-[10px] text-muted pt-2">+{uniqueTimes.length - 8} dalších časů</p>
+                                {uniqueTimes.length > 10 && (
+                                  <p className="text-center text-xs font-bold text-muted pt-2">+{uniqueTimes.length - 10} dalších</p>
                                 )}
                               </>
                             )
                           })() : (
-                            <div className="py-8 text-center text-[10px] text-muted/30 italic">
-                              Žádné volno
+                            <div className="py-12 text-center text-xs font-bold text-muted/30 uppercase tracking-widest bg-surface/50 rounded-xl border-2 border-dashed border-border/50">
+                              Obsazeno
                             </div>
                           )}
                         </div>

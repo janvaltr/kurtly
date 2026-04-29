@@ -1,46 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useTransition } from 'react'
 import { syncAllVenues } from './actions'
 
 export default function SyncButton() {
-  const [isSyncing, setIsSyncing] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-  const handleSync = async () => {
-    if (!confirm('Tato operace spustí scrapery pro všechny haly a může trvat až minutu. Pokračovat?')) return
-    
-    setIsSyncing(true)
-    const result = await syncAllVenues()
-    setIsSyncing(false)
-
-    if (result.success) {
-      alert('Data byla úspěšně aktualizována!')
-    } else {
-      alert('Chyba při synchronizaci: ' + result.error)
-    }
+  const handleSync = () => {
+    startTransition(async () => {
+      try {
+        await syncAllVenues()
+        alert('Synchronizace dokončena!')
+      } catch (error) {
+        alert('Chyba při synchronizaci: ' + (error instanceof Error ? error.message : 'Neznámá chyba'))
+      }
+    })
   }
 
   return (
     <button
       onClick={handleSync}
-      disabled={isSyncing}
-      className={`flex items-center space-x-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
-        isSyncing 
-          ? 'bg-surface-2 text-muted cursor-not-allowed' 
-          : 'bg-primary text-bg hover:bg-primary/90 shadow-lg shadow-primary/20'
-      }`}
+      disabled={isPending}
+      className="flex items-center space-x-2 rounded-xl bg-text px-6 py-3 font-display text-sm font-bold text-bg transition-all hover:bg-text/90 disabled:opacity-50 shadow-lg shadow-text/10 active:scale-95"
     >
-      {isSyncing ? (
-        <>
-          <span className="animate-spin inline-block w-4 h-4 border-2 border-muted border-t-transparent rounded-full mr-2"></span>
-          Synchronizuji...
-        </>
-      ) : (
-        <>
-          <span>🔄</span>
-          <span>Aktualizovat data</span>
-        </>
-      )}
+      <span className={isPending ? 'animate-spin' : ''}>
+        {isPending ? '⏳' : '🔄'}
+      </span>
+      <span>{isPending ? 'Synchronizuji...' : 'Aktualizovat data'}</span>
     </button>
   )
 }
