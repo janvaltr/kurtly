@@ -2,7 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { format, addDays, isSameDay } from 'date-fns'
 import { cs } from 'date-fns/locale'
+import { formatInTimeZone } from 'date-fns-tz'
 import SyncButton from './SyncButton'
+
+const TIMEZONE = 'Europe/Prague'
 
 export default async function VenuesPage() {
   const supabase = await createClient()
@@ -72,7 +75,7 @@ export default async function VenuesPage() {
                           {daySlots.length > 0 ? (() => {
                             // Seskupíme podle času
                             const timeGroups = daySlots.reduce((acc, slot) => {
-                              const time = format(new Date(slot.starts_at), 'HH:mm')
+                              const time = formatInTimeZone(new Date(slot.starts_at), TIMEZONE, 'HH:mm')
                               if (!acc[time]) acc[time] = []
                               acc[time].push(slot)
                               return acc
