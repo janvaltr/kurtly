@@ -9,16 +9,16 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const DAYS = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']
-const HOURS = Array.from({ length: 16 }, (_, i) => {
-  const h = Math.floor(i / 2) + 15
+const HOURS = Array.from({ length: 31 }, (_, i) => {
+  const h = Math.floor(i / 2) + 7
   const m = i % 2 === 0 ? '00' : '30'
   return `${h}:${m}`
 })
 
-// Pomocná funkce pro převod času na index (15:00 -> 0, 15:30 -> 1, ...)
+// Pomocná funkce pro převod času na index (7:00 -> 0, 7:30 -> 1, ...)
 const timeToIndex = (time: string) => {
   const [h, m] = time.split(':').map(Number)
-  return (h - 15) * 2 + (m === 30 ? 1 : 0)
+  return (h - 7) * 2 + (m === 30 ? 1 : 0)
 }
 
 export default function WeeklyGrid({ 
@@ -150,9 +150,9 @@ export default function WeeklyGrid({
         <button
           onClick={handleSaveInternal}
           disabled={isSaving}
-          className="rounded-md bg-primary px-8 py-2 font-display font-bold text-bg hover:bg-primary/90 disabled:opacity-50"
+          className="rounded-xl bg-primary px-10 py-4 font-display font-black text-bg hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all active:scale-95"
         >
-          {isSaving ? 'Ukládám...' : 'Uložit dostupnost'}
+          {isSaving ? 'Ukládám...' : 'Uložit moji dostupnost'}
         </button>
       </div>
     </div>

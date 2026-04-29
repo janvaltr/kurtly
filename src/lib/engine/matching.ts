@@ -20,9 +20,28 @@ export async function isUserAvailable(
   startsAt: Date, 
   endsAt: Date
 ): Promise<boolean> {
-  const dayOfWeek = startsAt.getDay()
-  const timeFrom = startsAt.toTimeString().substring(0, 5) // "HH:mm"
-  const timeTo = endsAt.toTimeString().substring(0, 5)
+  // Převedeme UTC čas na brněnský čas pro porovnání s "recurring" tabulkou
+  const brnoTime = new Intl.DateTimeFormat('cs-CZ', {
+    timeZone: 'Europe/Prague',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    weekday: 'long'
+  }).formatToParts(startsAt)
+
+  const h = brnoTime.find(p => p.type === 'hour')?.value
+  const m = brnoTime.find(p => p.type === 'minute')?.value
+  const timeFrom = `${h}:${m}`
+  
+  // Day of week (0 = Ne, 1 = Po, ...) - Intl vrací jméno, musíme převést nebo použít startsAt.toLocaleString
+  // Jednodušší: startsAt.toLocaleString s timeZone a pak getDay z výsledku
+  const brnoDate = new Date(startsAt.toLocaleString('en-US', { timeZone: 'Europe/Prague' }))
+  const dayOfWeek = (brnoDate.getDay() + 6) % 7 // Převedeme na 0=Po ... 6=Ne
+  
+  const endsBrno = new Date(endsAt.toLocaleString('en-US', { timeZone: 'Europe/Prague' }))
+  const hEnd = String(endsBrno.getHours()).padStart(2, '0')
+  const mEnd = String(endsBrno.getMinutes()).padStart(2, '0')
+  const timeTo = `${hEnd}:${mEnd}`
 
   // Načteme veškerou relevantní dostupnost pro uživatele a skupinu
   const { data: availability } = await supabase

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import MatchCard from '@/components/groups/MatchCard'
+import MatchTriggerButton from './MatchTriggerButton'
 
 export default async function GroupPage({
   params
@@ -14,7 +15,6 @@ export default async function GroupPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // Načtení detailu skupiny a členů
   const { data: group } = await supabase
     .from('groups')
     .select('*, group_members(*)')
@@ -25,13 +25,11 @@ export default async function GroupPage({
     redirect('/dashboard')
   }
 
-  // Zkontrolujeme, jestli je uživatel členem
   const isMember = group.group_members.some((m: any) => m.user_id === user.id)
   if (!isMember) {
     redirect('/dashboard')
   }
 
-  // Načtení matchů pro tuto skupinu (včetně detailů slotu a haly)
   const { data: matches } = await supabase
     .from('matches')
     .select(`
@@ -45,62 +43,70 @@ export default async function GroupPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg p-8 text-text">
-      <div className="mx-auto w-full max-w-4xl space-y-8">
-        <header className="flex items-center justify-between border-b border-border pb-6">
+    <div className="min-h-screen bg-bg">
+      <div className="mx-auto w-full max-w-6xl px-8 py-12 space-y-12">
+        <header className="flex items-end justify-between border-b-4 border-primary/20 pb-8">
           <div>
-            <Link href="/dashboard" className="text-sm text-muted hover:text-text">← Zpět na dashboard</Link>
-            <h1 className="mt-2 font-display text-3xl font-bold text-primary">{group.name}</h1>
-            <p className="text-muted">{group.sport} • {group.city}</p>
+            <Link href="/dashboard" className="text-xs font-black uppercase tracking-widest text-muted hover:text-primary transition-colors">← Zpět na dashboard</Link>
+            <h1 className="mt-4 font-display text-5xl font-black text-text italic tracking-tighter leading-none uppercase">{group.name}</h1>
+            <p className="mt-2 text-lg font-bold text-muted uppercase tracking-widest">{group.sport} • {group.city}</p>
           </div>
-          <div className="rounded-md border border-border bg-surface px-6 py-3 text-center">
-            <p className="text-xs uppercase tracking-wider text-muted">Zvací kód</p>
-            <p className="font-mono text-2xl font-bold tracking-widest text-text">{group.invite_code}</p>
+          <div className="rounded-2xl border-2 border-border bg-white px-8 py-4 text-center shadow-sm">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted mb-1">Zvací kód</p>
+            <p className="font-display text-3xl font-black tracking-[0.3em] text-primary">{group.invite_code}</p>
           </div>
         </header>
 
-        <div className="flex justify-end space-x-3">
-          <Link
-            href={`/groups/${id}/availability`}
-            className="rounded-md bg-surface-2 border border-border px-4 py-2 text-sm font-medium hover:bg-surface transition-colors"
-          >
-            🗓️ Dostupnost
-          </Link>
-          <Link
-            href={`/groups/${id}/venues`}
-            className="rounded-md bg-surface-2 border border-border px-4 py-2 text-sm font-medium hover:bg-surface transition-colors"
-          >
-            🏢 Preference hal
-          </Link>
+        <div className="flex justify-between items-center bg-surface p-4 rounded-2xl border-2 border-border">
+          <div className="flex space-x-4">
+            <Link
+              href={`/groups/${id}/availability`}
+              className="rounded-xl bg-white border-2 border-border px-6 py-3 text-sm font-bold hover:border-primary transition-all shadow-sm flex items-center space-x-2"
+            >
+              <span>🗓️ Moje dostupnost</span>
+            </Link>
+            <Link
+              href={`/groups/${id}/venues`}
+              className="rounded-xl bg-white border-2 border-border px-6 py-3 text-sm font-bold hover:border-primary transition-all shadow-sm flex items-center space-x-2"
+            >
+              <span>🏢 Preferované haly</span>
+            </Link>
+          </div>
+          <MatchTriggerButton groupId={id} />
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
-            <h2 className="font-display text-2xl font-bold">Nalezené termíny</h2>
+        <div className="grid gap-12 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-8">
+            <h2 className="font-display text-3xl font-black text-text uppercase tracking-tight italic">Nalezené termíny</h2>
             {matches && matches.length > 0 ? (
-              <div className="grid gap-4">
+              <div className="grid gap-6">
                 {matches.map((match: any) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-border p-12 text-center">
-                <p className="text-muted">Zatím jsme pro vaši skupinu nenašli žádný volný termín.</p>
-                <p className="text-xs text-muted/50 mt-2">Zkontrolujte, zda máte nastavenou dostupnost a preference hal.</p>
+              <div className="rounded-3xl border-2 border-dashed border-border p-16 text-center bg-surface/30">
+                <p className="text-xl font-bold text-muted">Zatím jsme pro vaši skupinu nenašli žádný volný termín.</p>
+                <p className="text-sm text-muted/60 mt-4 max-w-sm mx-auto">
+                  Zkuste kliknout na tlačítko <strong>Hledat zápasy</strong> výše nebo upravte svoji dostupnost.
+                </p>
               </div>
             )}
           </div>
 
-          <div className="space-y-6">
-            <h2 className="font-display text-2xl font-bold">Členové</h2>
-            <div className="space-y-3">
+          <div className="space-y-8">
+            <h2 className="font-display text-3xl font-black text-text uppercase tracking-tight italic">Tým</h2>
+            <div className="space-y-4">
               {group.group_members.map((member: any) => (
-                <div key={member.user_id} className="flex items-center justify-between rounded-xl border border-border bg-surface p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                <div key={member.user_id} className="flex items-center justify-between rounded-2xl border-2 border-border bg-white p-5 shadow-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">
                       {member.role === 'admin' ? 'A' : 'M'}
                     </div>
-                    <span className="text-sm font-medium">{member.user_id === user.id ? 'Ty' : 'Hráč'}</span>
+                    <div>
+                      <p className="font-bold text-text">{member.user_id === user.id ? 'Ty' : 'Hráč'}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted">{member.role}</p>
+                    </div>
                   </div>
                 </div>
               ))}
