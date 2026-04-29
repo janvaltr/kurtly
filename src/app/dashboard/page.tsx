@@ -29,6 +29,12 @@ export default async function DashboardPage() {
           <h1 className="font-display text-3xl font-bold text-primary">Tvoje skupiny</h1>
           <div className="flex space-x-4">
             <Link
+              href="/venues"
+              className="rounded-md border border-border bg-surface px-4 py-2 font-display text-sm font-medium hover:bg-surface-2"
+            >
+              🏢 Průzkumník hal
+            </Link>
+            <Link
               href="/groups/join"
               className="rounded-md border border-border bg-surface px-4 py-2 font-display text-sm font-medium hover:bg-surface-2"
             >
